@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronologie Animus - Assassin's Creed</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        animus: {
+                            blue: '#00f3ff',
+                            darkblue: '#031926',
+                            darker: '#010c14',
+                            red: '#ff003c',
+                            cyan: '#00b4d8',
+                            glow: '#e0fbfc',
+                            panel: 'rgba(3, 25, 38, 0.85)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #010c14;
+            color: #00f3ff;
+            overflow-x: hidden;
+        }
+        .animus-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        /* Scanlines effect */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 243, 255, 0.05) 50%,
+                rgba(0, 243, 255, 0.05)
+            );
+            background-size: 100% 4px;
+        }
+        /* Grid background */
+        .animus-grid {
+            background-image: 
+                linear-gradient(to right, rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        /* Glowing borders & shadows */
+        .glow-box {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+        }
+        .glow-box:hover {
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+            border-color: #00f3ff;
+        }
+        .glow-box-red {
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
+            border: 1px solid rgba(255, 0, 60, 0.4);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.7);
+        }
+        .glow-text-red {
+            text-shadow: 0 0 10px rgba(255, 0, 60, 0.7);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #010c14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00f3ff;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff003c;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-animus-darker text-animus-blue min-h-screen relative selection:bg-animus-blue selection:text-black">
+
+    <!-- Background FX -->
+    <div class="fixed inset-0 animus-grid pointer-events-none z-0"></div>
+    <div class="fixed inset-0 scanlines pointer-events-none z-50"></div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+        
+        <!-- Header / HUD Top Bar -->
+        <header class="border-b border-animus-blue/30 bg-animus-darkblue/90 backdrop-blur-md sticky top-0 z-40 px-4 py-3 flex flex-wrap justify-between items-center shadow-lg">
+            <div class="flex items-center space-x-3">
+                <div class="w-3 h-3 bg-animus-red rounded-full animate-ping"></div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-widest uppercase text-white glow-text">
+                        ANIMUS <span class="text-animus-blue">DNA DATABASE</span>
+                    </h1>
+                    <p class="text-xs animus-font text-animus-cyan/70">SYSTÈMES DE SYNCHRONISATION MÉMORIELLE v4.72</p>
+                </div>
+            </div>
+
+            <!-- Stats & Sync level -->
+            <div class="flex items-center space-x-6 mt-2 sm:mt-0">
+                <div class="hidden md:block text-right">
+                    <p class="text-xs animus-font text-animus-cyan">STATUT DE SYNCHRONISATION</p>
+                    <p class="text-lg font-bold text-white glow-text" id="sync-percentage">100%</p>
+                </div>
+                <div class="flex items-center space-x-2 bg-animus-darker px-3 py-1.5 rounded border border-animus-blue/40">
+                    <i class="fa-solid fa-dna text-animus-blue animate-pulse"></i>
+                    <span class="animus-font text-xs uppercase" id="user-status">ANIMUS CONNECTÉ</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Subheader / Filter Controls -->
+        <section class="bg-animus-darkblue/50 border-b border-animus-blue/20 px-4 py-3 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                
+                <!-- Search Bar -->
+                <div class="relative w-full md:w-80">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-animus-blue/60">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="search-input" placeholder="Rechercher un jeu, un personnage, une ère..." 
+                           class="w-full bg-animus-darker/80 border border-animus-blue/40 rounded px-3 py-1.5 pl-10 text-sm text-white placeholder-animus-blue/40 focus:outline-none focus:border-animus-blue transition">
+                </div>
+
+                <!-- Category Filters -->
+                <div class="flex flex-wrap items-center gap-2 justify-center" id="filter-buttons">
+                    <button data-filter="all" class="filter-btn px-3 py-1 rounded text-xs uppercase font-bold tracking-wider bg-animus-blue text-black transition shadow-[0_0_10px_rgba(0,243,255,0.4)]">
+                        Tout
+                    </button>
+                    <button data-filter="isu" class="filter-btn px-3 py-1 rounded text-xs uppercase font-bold tracking-wider bg-animus-darker border border-animus-blue/40 text-animus-blue hover:bg-animus-blue/20 transition">
+                        Civilisation Isu
+                    </button>
+                    <button data-filter="antiquite" class="filter-btn px-3 py-1 rounded text-xs uppercase font-bold tracking-wider bg-animus-darker border border-animus-blue/40 text-animus-blue hover:bg-animus-blue/20 transition">
+                        Antiquité
+                    </button>
+                    <button data-filter="moyenage" class="filter-btn px-3 py-1 rounded text-xs uppercase font-bold tracking-wider bg-animus-darker border border-animus-blue/40 text-animus-blue hover:bg-animus-blue/20 transition">
+                        Moyen Âge & Renaissance
+                    </button>
+                    <button data-filter="moderne" class="filter-btn px-3 py-1 rounded text-xs uppercase font-bold tracking-wider bg-animus-darker border border-animus-blue/40 text-animus-blue hover:bg-animus-blue/20 transition">
+                        Ère Moderne & Contemporaine
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Timeline Workspace -->
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col">
+            
+            <div class="mb-6 flex justify-between items-end">
+                <div>
+                    <h2 class="text-xl font-bold uppercase tracking-widest text-white flex items-center gap-2">
+                        <i class="fa-solid fa-timeline text-animus-blue"></i> Flux Temporel Mémoriel
+                    </h2>
+                    <p class="text-xs animus-font text-animus-cyan/70">CLIQUEZ SUR UN NŒUD POUR EXTRAIRE LES DONNÉES DE L'ADN</p>
+                </div>
+                <div class="text-xs animus-font text-animus-red flex items-center gap-1">
+                    <i class="fa-solid fa-triangle-exclamation"></i> ALERTE TEMPÉRATURE ABSTERGO : STABLE
+                </div>
+            </div>
+
+            <!-- Timeline Container -->
+            <div class="relative pl-6 md:pl-10 border-l-2 border-animus-blue/40 my-4 space-y-12" id="timeline-container">
+                <!-- Timeline nodes will be injected here via JavaScript -->
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-animus-blue/30 bg-animus-darkblue/90 py-4 text-center text-xs animus-font text-animus-cyan/60">
+            <p>ANIMUS OS - ABSTERGO INDUSTRIES REPLICA // ACCÈS AUTORISÉ UNIQUEMENT AUX SUJETS DE TEST</p>
+        </footer>
+
+    </div>
+
+    <!-- Modal Detail View -->
+    <div id="detail-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-animus-darkblue border-2 border-animus-blue rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative glow-box">
+            <!-- Close Button -->
+            <button id="modal-close" class="absolute top-4 right-4 text-animus-blue hover:text-animus-red text-xl transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div id="modal-content">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const timelineData = [
+{
+                id: "retour-abstergo",
+                category: "moderne",
+                date: "14 Décembre 2012",
+                title: "Retour chez Abstergo",
+                subtitle: "La Chute du Dr Warren Vidic",
+                faction: "Confrérie des Assassins / Abstergo Industries",
+                description: "Desmond força un garde à pointer son arme sur le scientifique horrifié par ces pouvoirs. Le garde tira, mettant un terme à la vie au docteur Vidic. Il fut enterré deux jours plus tard, non loin du centre de recherche romain. Sur sa stèle fut gravée la locution latine utilisée jadis notamment par les Assassins.",
+                protagonists: "Desmond Miles, Dr. Warren Vidic",
+                games: "Assassin's Creed III",
+                status: "Archives"
+            },
+            {
+                id: "syndicate",
+                category: "moderne",
+                date: "1868",
+                title: "Assassin's Creed: Syndicate",
+                subtitle: "Londres Victorienne & Révolution Industrielle",
+                faction: "Les Rooks (Gang) & Assassins",
+                description: "Les jumeaux Jacob et Evie Frye unissent leurs forces à Londres pour libérer la classe ouvrière de l'emprise des Templiers qui contrôlent l'industrie et le crime organisé.",
+                protagonists: "Jacob & Evie Frye",
+                games: "Assassin's Creed: Syndicate",
+                status: "Synchronisé"
+            },
+];
+
+        const timelineContainer = document.getElementById('timeline-container');
+        const searchInput = document.getElementById('search-input');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const detailModal = document.getElementById('detail-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalClose = document.getElementById('modal-close');
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function renderTimeline() {
+            timelineContainer.innerHTML = '';
+
+            const filteredData = timelineData.filter(item => {
+                const matchesFilter = currentFilter === 'all' || item.category === currentFilter;
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.games.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredData.length === 0) {
+                timelineContainer.innerHTML = `
+                    <div class="text-center py-12 text-animus-blue/50 animus-font">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-animus-red"></i>
+                        <p>AUCUNE DONNÉE MÉMORIELLE CORRESPONDANTE TROUVÉE DANS LA BASE DE DONNÉES.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredData.forEach((item) => {
+                const isRed = item.category === 'isu';
+                const borderColor = isRed ? 'border-animus-red' : 'border-animus-blue';
+                const textColor = isRed ? 'text-animus-red' : 'text-animus-blue';
+                const glowClass = isRed ? 'glow-box-red' : 'glow-box';
+
+                const nodeElement = document.createElement('div');
+                nodeElement.className = `relative group cursor-pointer transition-all duration-300 transform hover:translate-x-2`;
+                nodeElement.innerHTML = `
+                    <!-- Timeline Marker Point -->
+                    <div class="absolute -left-[31px] md:-left-[47px] top-1.5 w-4 h-4 rounded-full bg-animus-darker border-2 ${borderColor} flex items-center justify-center group-hover:scale-125 transition">
+                        <div class="w-1.5 h-1.5 rounded-full ${isRed ? 'bg-animus-red' : 'bg-animus-blue'} animate-pulse"></div>
+                    </div>
+
+                    <!-- Card Box -->
+                    <div class="bg-animus-panel border ${borderColor.replace('border-', 'border-')}/50 rounded-lg p-5 ${glowClass} backdrop-blur-md transition-all">
+                        <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
+                            <span class="animus-font text-xs uppercase px-2 py-0.5 rounded bg-animus-darker ${textColor} border ${borderColor}/30">
+                                ${item.date}
+                            </span>
+                            <span class="animus-font text-xs text-animus-cyan/70 uppercase">
+                                <i class="fa-solid fa-gamepad mr-1"></i> ${item.games}
+                            </span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-white tracking-wide mb-1 group-hover:${textColor} transition">
+                            ${item.title}
+                        </h3>
+                        <p class="text-sm font-semibold text-animus-cyan mb-2">${item.subtitle}</p>
+                        <p class="text-xs md:text-sm text-gray-300 line-clamp-2 mb-4">${item.description}</p>
+                        
+                        <div class="flex justify-between items-center pt-3 border-t border-animus-blue/10">
+                            <span class="text-xs animus-font text-gray-400">FACTION: <span class="text-white">${item.faction}</span></span>
+                            <button class="text-xs animus-font uppercase px-3 py-1 bg-animus-blue/20 hover:bg-animus-blue hover:text-black text-animus-blue rounded border border-animus-blue/40 transition flex items-center gap-1">
+                                <span>Accéder aux souvenirs</span> <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                nodeElement.addEventListener('click', () => openModal(item));
+                timelineContainer.appendChild(nodeElement);
+            });
+        }
+
+        function openModal(item) {
+            const isRed = item.category === 'isu';
+            const textColor = isRed ? 'text-animus-red' : 'text-animus-blue';
+            const borderColor = isRed ? 'border-animus-red' : 'border-animus-blue';
+
+            modalContent.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="animus-font text-xs uppercase px-2.5 py-1 rounded bg-animus-darker ${textColor} border ${borderColor}/40">
+                        ${item.date}
+                    </span>
+                    <span class="animus-font text-xs text-animus-cyan">STATUT: ${item.status}</span>
+                </div>
+                <h2 class="text-2xl font-bold text-white tracking-wider mb-1">${item.title}</h2>
+                <p class="text-base font-semibold ${textColor} mb-4">${item.subtitle}</p>
+                
+                <div class="space-y-4 text-sm text-gray-200">
+                    <div class="bg-animus-darker/70 p-4 rounded border border-animus-blue/20">
+                        <p class="leading-relaxed">${item.description}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-animus-darker/50 p-3 rounded border border-animus-blue/20">
+                            <p class="text-xs animus-font text-animus-cyan mb-1">PROTAGONISTES CLÉS</p>
+                            <p class="font-bold text-white">${item.protagonists}</p>
+                        </div>
+                        <div class="bg-animus-darker/50 p-3 rounded border border-animus-blue/20">
+                            <p class="text-xs animus-font text-animus-cyan mb-1">RÉFÉRENCE LUDIQUE</p>
+                            <p class="font-bold text-white">${item.games}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-animus-blue/20 flex justify-between items-center">
+                    <span class="text-xs animus-font text-animus-cyan/60">ABSTERGO FILE CODE: #${item.id.toUpperCase()}</span>
+                    <button onclick="closeModal()" class="px-4 py-1.5 bg-animus-blue text-black font-bold text-xs uppercase rounded hover:bg-white transition">
+                        Fermer le fichier
+                    </button>
+                </div>
+            `;
+            detailModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            detailModal.classList.add('hidden');
+        }
+
+        modalClose.addEventListener('click', closeModal);
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) closeModal();
+        });
+
+        // Filter button listeners
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-animus-blue', 'text-black', 'shadow-[0_0_10px_rgba(0,243,255,0.4)]');
+                    b.classList.add('bg-animus-darker', 'text-animus-blue');
+                });
+                btn.classList.remove('bg-animus-darker', 'text-animus-blue');
+                btn.classList.add('bg-animus-blue', 'text-black', 'shadow-[0_0_10px_rgba(0,243,255,0.4)]');
+
+                currentFilter = btn.getAttribute('data-filter');
+                renderTimeline();
+            });
+        });
+
+        // Search input listener
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderTimeline();
+        });
+
+        // Initial render
+        renderTimeline();
+    </script>
+</body>
+</html>
